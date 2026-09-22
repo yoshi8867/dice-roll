@@ -13,6 +13,7 @@
   --font:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",
     "맑은 고딕",system-ui,sans-serif;
   --size:108px; --half:54px; --spin:1400ms;
+  --skin:3px;            /* 속껍질이 바깥 면보다 얼마나 안쪽인가 */
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%}
@@ -33,20 +34,44 @@ body{background:var(--ink-900);color:var(--text);font:15px/1.6 var(--font);
   transform-style:preserve-3d;        /* 면들이 3차원에 그대로 선다 */
   transition:transform var(--spin) cubic-bezier(.16,.84,.28,1)}
 
-.face{position:absolute;inset:0;
-  background:#f4f1ea;border-radius:10px;border:1px solid #d8d2c4;
-  box-shadow:inset 0 0 18px rgba(120,110,90,.16);
+/* 모서리를 **안 둥글린다.** 평면 여섯으로 만든 정육면체는 둥근 모서리에
+   실제 형상이 없다 — 세 면의 둥근 귀퉁이가 만나는 자리에는 아무 것도
+   없어서, 속껍질을 아무리 대도 어느 각도에서는 뒤가 비친다.
+   각지게 두면 면끼리 정확히 맞물려 구멍이 아예 안 생긴다.
+   (카지노용 주사위가 원래 이렇게 각져 있다.)
+
+   inset 을 음수로 줘 한 픽셀 키운 것은, 딱 맞추면 안티에일리어싱 때문에
+   맞닿는 선에 머리카락만 한 실금이 보이기 때문이다. 살짝 겹쳐 둔다. */
+.face{position:absolute;inset:-1px;
+  background:#f4f1ea;border:1px solid #e0dacb;
+  /* 가장자리를 살짝 어둡게 해 각진 판이 납작해 보이지 않게 한다 */
+  box-shadow:inset 0 0 26px rgba(120,110,90,.20),
+             inset 0 0 4px rgba(120,110,90,.10);
   display:grid;grid-template-columns:repeat(3,1fr);
   grid-template-rows:repeat(3,1fr);padding:13px;gap:5px;
   backface-visibility:hidden}
-/* 속을 채우는 판 셋. 면을 둥글리면 **여덟 모서리에 구멍**이 나서 뒤의
-   검은 배경이 비친다. 정육면체 한가운데를 가로지르는 판 셋을 깔아 두면
-   그 구멍으로 이 판들이 보여 틈이 메워진다. 평소엔 면에 가려 안 보인다 */
-.core{position:absolute;inset:0;background:#ece6d8;
-  backface-visibility:hidden}
-.c1{transform:translateZ(0)}
-.c2{transform:rotateY(90deg)}
-.c3{transform:rotateX(90deg)}
+/* ── 속껍질 ──────────────────────────────────────────────────
+   면을 둥글리면 여덟 **모서리**에 구멍이 나 뒤의 검은 배경이 비친다.
+
+   처음엔 한가운데를 가로지르는 판 셋을 깔았는데 모자랐다. 한 모서리에
+   난 구멍 셋은 서로 가까워서, 하나로 들어와 다른 하나로 빠져나가는
+   시선이 생긴다 — 그 길은 가운데 판을 지나지 않는다. 게다가 판에
+   backface-visibility:hidden 이 걸려 있어 **뒤에서 보면 사라졌다.**
+
+   그래서 **닫힌 속껍질**로 바꾼다. 바깥 면보다 조금 안쪽에, 귀퉁이를
+   안 둥글린 면 여섯을 한 겹 더 두른다. 닫힌 상자라 어느 쪽으로 들어온
+   시선이든 반드시 막힌다. 평소엔 바깥 면에 가려 안 보이고, 구멍
+   자리에서만 살짝 드러나 모서리를 메운다. */
+/* 한 겹 작은 **제대로 된 정육면체**라야 한다. 면을 안 줄이고 안쪽으로만
+   밀면 면 끝이 바깥 면과 같은 평면에 닿아 z-다툼이 나고, 각도에 따라
+   줄무늬가 생긴다. 그래서 안쪽으로 민 만큼 면도 줄인다 */
+.core{position:absolute;inset:var(--skin);background:#ece6d8}
+.k1{transform:translateZ(calc(var(--half) - var(--skin)))}
+.k6{transform:rotateY(180deg) translateZ(calc(var(--half) - var(--skin)))}
+.k2{transform:rotateY(90deg)  translateZ(calc(var(--half) - var(--skin)))}
+.k5{transform:rotateY(-90deg) translateZ(calc(var(--half) - var(--skin)))}
+.k3{transform:rotateX(90deg)  translateZ(calc(var(--half) - var(--skin)))}
+.k4{transform:rotateX(-90deg) translateZ(calc(var(--half) - var(--skin)))}
 
 /* 여섯 면을 정육면체 자리로 밀어낸다. 마주 보는 면끼리 합이 7 이다 */
 .f1{transform:translateZ(var(--half))}                   /* 앞  */
@@ -58,10 +83,6 @@ body{background:var(--ink-900);color:var(--text);font:15px/1.6 var(--font);
 
 .pip{width:100%;height:100%;border-radius:50%;background:#20201d;
   box-shadow:inset 0 -1px 2px rgba(255,255,255,.28)}
-/* **1 만 붉은 점** */
-.pip.one{background:var(--red);
-  box-shadow:inset 0 -1px 2px rgba(255,255,255,.35),
-             0 0 9px rgba(229,83,75,.45)}
 
 button{font:inherit;color:var(--gold);background:var(--ink-700);
   border:1px solid var(--gold);border-radius:8px;padding:13px 34px;
@@ -116,9 +137,7 @@ var FACE = {
 function faceHTML(n) {
   var on = PIPS[n], html = "";
   for (var i = 1; i <= 9; i++) {
-    html += on.indexOf(i) >= 0
-      ? '<div class="pip' + (n === 1 ? " one" : "") + '"></div>'
-      : "<div></div>";
+    html += on.indexOf(i) >= 0 ? '<div class="pip"></div>' : "<div></div>";
   }
   return '<div class="face f' + n + '">' + html + "</div>";
 }
@@ -128,8 +147,10 @@ function makeDie() {
   tilt.className = "tilt";
   var die = document.createElement("div");
   die.className = "die";
-  var html = '<div class="core c1"></div><div class="core c2"></div>' +
-             '<div class="core c3"></div>';
+  var html = "";
+  ["k1", "k2", "k3", "k4", "k5", "k6"].forEach(function (k) {
+    html += '<div class="core ' + k + '"></div>';
+  });
   for (var n = 1; n <= 6; n++) html += faceHTML(n);
   die.innerHTML = html;
   tilt.appendChild(die);
